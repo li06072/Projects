@@ -1,9 +1,10 @@
 #include <SDL.h>
 #include <SDL_image.h>
-//#include <SDL_mixer.h>
+#include <SDL_mixer.h>
 #include <stdio.h>
+#include <string>
 #include <iostream>
-#include "mover.hpp"
+#include "dungeon.hpp"
 
 
 #include <string>
@@ -37,7 +38,7 @@ SDL_Texture* gTexture = NULL;
 //global reference to png image sheets
 SDL_Texture* assets=NULL;
 
-//Mix_Music *bgMusic = NULL;
+Mix_Music *bgMusic = NULL;
 
 
 
@@ -61,7 +62,7 @@ bool init()
 		}
 
 		//Create window
-		gWindow = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+		gWindow = SDL_CreateWindow( "Dungeons", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
 		if( gWindow == NULL )
 		{
 			printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
@@ -88,11 +89,11 @@ bool init()
 					printf( "SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError() );
 					success = false;
 				}
-				//if( Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 2048 ) < 0 )
-				// {
-				// 	printf( "SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError() );
-				// 	success = false;
-				// }
+				if( Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 2048 ) < 0 )
+				{
+					printf( "SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError() );
+					success = false;
+				}
 			}
 		}
 	}
@@ -111,12 +112,12 @@ bool loadMedia()
         printf("Unable to run due to error: %s\n",SDL_GetError());
         success =false;
     }
-	//bgMusic = Mix_LoadMUS( "beat.wav" );
+	bgMusic = Mix_LoadMUS( "beat.wav" );
 
-	// if(bgMusic == NULL){
-	// 	printf("Unable to load music: %s \n", Mix_GetError());
-	// 	success = false;
-	// }
+	if(bgMusic == NULL){
+		printf("Unable to load music: %s \n", Mix_GetError());
+		success = false;
+	}
 	return success;
 }
 
@@ -131,11 +132,11 @@ void close()
 	SDL_DestroyWindow( gWindow );
 	gWindow = NULL;
 	gRenderer = NULL;
-	//Mix_FreeMusic(bgMusic);
-	//bgMusic = NULL;
+	Mix_FreeMusic(bgMusic);
+	bgMusic = NULL;
 	//Quit SDL subsystems
 	IMG_Quit();
-	//Mix_Quit();
+	Mix_Quit();
 	SDL_Quit();
 }
 
@@ -190,7 +191,9 @@ int main( int argc, char* args[] )
 			//Event handler
 			SDL_Event e;
 
+			createDungeon();
 			update(gRenderer, assets);
+
 			//While application is running
 			while( !quit )
 			{
@@ -202,16 +205,27 @@ int main( int argc, char* args[] )
 					{
 						quit = true;
 					}
-					if(e.type == SDL_KEYDOWN)	
-						moveWarrior(gRenderer, assets, e.key.keysym.sym);
+					if(e.type == SDL_KEYDOWN)	{
+						SDL_Keycode key = e.key.keysym.sym;
+						std::string direction = "";
+						if (key == SDLK_UP)
+								direction = "up";
+						else if (key == SDLK_DOWN) 
+								direction = "down";
+						else if (key == SDLK_RIGHT) 
+								direction = "right";
+						else if (key == SDLK_LEFT)
+								direction = "left";
+						update(gRenderer, assets, direction);
+					}
 					// update();	
 				}
 
-				//if( Mix_PlayingMusic() == 0 )
-				// {
-				// 	//Play the music
-				// 	Mix_PlayMusic( bgMusic, 2 );
-				// }
+				if( Mix_PlayingMusic() == 0 )
+				{
+					//Play the music
+					Mix_PlayMusic( bgMusic, 2 );
+				}
 			
 			}
 			
